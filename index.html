@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEEPAK Portfolio | 3D Experience</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
+            background: #000;
+            color: #fff;
+        }
+        #canvas-container { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            z-index: 1;
+        }
+        .content { 
+            position: relative; 
+            z-index: 10; 
+            pointer-events: none;
+        }
+        .content > * { pointer-events: auto; }
+        
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: gradientShift 3s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .project-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-10px) scale(1.02);
+        }
+        
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .glow {
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5),
+                        0 0 40px rgba(118, 75, 162, 0.3);
+        }
+        
+        .nav-link {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            transform: translateX(0);
+        }
+        
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); }
+            40% { transform: translateY(-20px) translateX(-50%); }
+            60% { transform: translateY(-10px) translateX(-50%); }
+        }
+        
+        .skill-orb {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .skill-orb:hover {
+            transform: scale(1.1);
+            background: rgba(102, 126, 234, 0.2);
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+        }
+        
+        .timeline-item {
+            opacity: 0;
+            transform: translateX(-50px);
+            animation: slideIn 0.6s ease forwards;
+        }
+        
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .contact-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .contact-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .contact-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div class="content">
+        <!-- Navigation -->
+        <nav class="fixed w-full top-0 z-50 py-6 px-8">
+            <div class="max-w-7xl mx-auto flex justify-between items-center glass-panel px-8 py-4">
+                <div class="text-2xl font-bold gradient-text">DEEPAK</div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#home" class="nav-link hover:text-purple-400 transition">Home</a>
+                    <a href="#about" class="nav-link hover:text-purple-400 transition">About</a>
+                    <a href="#skills" class="nav-link hover:text-purple-400 transition">Skills</a>
+                    <a href="#projects" class="nav-link hover:text-purple-400 transition">Projects</a>
+                    <a href="#contact" class="nav-link hover:text-purple-400 transition">Contact</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section id="home" class="min-h-screen flex items-center justify-center px-4">
+            <div class="text-center max-w-5xl">
+                <div class="floating mb-8">
+                    <h1 class="text-7xl md:text-9xl font-bold gradient-text mb-6">
+                        PORTFOLIO
+                    </h1>
+                </div>
+                <p class="text-xl md:text-3xl text-gray-300 mb-12 leading-relaxed">
+                    Crafting Immersive 3D Experiences <br/>
+                    <span class="text-purple-400">One Polygon at a Time</span>
+                </p>
+                <div class="flex flex-wrap justify-center gap-6">
+                    <button onclick="scrollToSection('projects')" class="contact-btn px-10 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full font-semibold text-lg hover:shadow-2xl transition-all">
+                        Explore Work
+                    </button>
+                    <button onclick="scrollToSection('contact')" class="contact-btn px-10 py-4 border-2 border-purple-400 rounded-full font-semibold text-lg hover:bg-purple-900/30 transition-all">
+                        Get in Touch
+                    </button>
+                </div>
+                <div class="scroll-indicator">
+                    <svg width="30" height="50" viewBox="0 0 30 50">
+                        <rect x="5" y="5" width="20" height="35" rx="10" fill="none" stroke="#667eea" stroke-width="2"/>
+                        <circle cx="15" cy="15" r="3" fill="#667eea">
+                            <animate attributeName="cy" from="15" to="30" dur="1.5s" repeatCount="indefinite"/>
+                        </circle>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="min-h-screen flex items-center justify-center px-4 py-20">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-5xl md:text-6xl font-bold gradient-text mb-16 text-center">About Me</h2>
+                <div class="glass-panel p-8 md:p-12">
+                    <div class="grid md:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <div class="relative">
+                                <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur-xl opacity-50"></div>
+                                <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-2xl">
+                                    <div id="profile-canvas" style="width: 100%; height: 300px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-bold mb-6 text-purple-300">Creative Developer</h3>
+                            <p class="text-gray-300 text-lg leading-relaxed mb-6">
+                                I'm a multidisciplinary creative developer specializing in WebGL, Three.js, and interactive 3D experiences. 
+                                With a passion for pushing the boundaries of web technology, I transform complex ideas into stunning visual realities.
+                            </p>
+                            <div class="grid grid-cols-2 gap-4 text-center">
+                                <div class="glass-panel p-4">
+                                    <div class="text-4xl font-bold text-purple-400">50+</div>
+                                    <div class="text-gray-400">Projects</div>
+                                </div>
+                                <div class="glass-panel p-4">
+                                    <div class="text-4xl font-bold text-purple-400">7+</div>
+                                    <div class="text-gray-400">Years Exp</div>
+                                </div>
+                                <div class="glass-panel p-4">
+                                    <div class="text-4xl font-bold text-purple-400">30+</div>
+                                    <div class="text-gray-400">Clients</div>
+                                </div>
+                                <div class="glass-panel p-4">
+                                    <div class="text-4xl font-bold text-purple-400">15</div>
+                                    <div class="text-gray-400">Awards</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills Section -->
+        <section id="skills" class="min-h-screen flex items-center justify-center px-4 py-20">
+            <div class="max-w-6xl mx-auto w-full">
+                <h2 class="text-5xl md:text-6xl font-bold gradient-text mb-16 text-center">Expertise</h2>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="glass-panel p-8 text-center hover:transform hover:scale-105 transition-all">
+                        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-3xl">
+                            🎨
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4">3D Design</h3>
+                        <p class="text-gray-400">Three.js, WebGL, Blender, Cinema 4D</p>
+                    </div>
+                    <div class="glass-panel p-8 text-center hover:transform hover:scale-105 transition-all">
+                        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-3xl">
+                            💻
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4">Development</h3>
+                        <p class="text-gray-400">React, JavaScript, TypeScript, GLSL</p>
+                    </div>
+                    <div class="glass-panel p-8 text-center hover:transform hover:scale-105 transition-all">
+                        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-pink-600 to-red-600 flex items-center justify-center text-3xl">
+                            ⚡
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4">Animation</h3>
+                        <p class="text-gray-400">GSAP, Framer Motion, Physics</p>
+                    </div>
+                </div>
+                
+                <div class="mt-16 glass-panel p-8">
+                    <h3 class="text-3xl font-bold mb-8 text-center gradient-text">Technical Skills</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-semibold">Three.js / WebGL</span>
+                                <span class="text-purple-400">95%</span>
+                            </div>
+                            <div class="h-3 bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-purple-600 to-pink-600 rounded-full" style="width: 95%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-semibold">React / Next.js</span>
+                                <span class="text-purple-400">92%</span>
+                            </div>
+                            <div class="h-3 bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-blue-600 to-purple-600 rounded-full" style="width: 92%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-semibold">GLSL Shaders</span>
+                                <span class="text-purple-400">88%</span>
+                            </div>
+                            <div class="h-3 bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-pink-600 to-red-600 rounded-full" style="width: 88%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-semibold">Animation (GSAP)</span>
+                                <span class="text-purple-400">90%</span>
+                            </div>
+                            <div class="h-3 bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-purple-600 to-blue-600 rounded-full" style="width: 90%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects Section -->
+        <section id="projects" class="min-h-screen flex items-center justify-center px-4 py-20">
+            <div class="max-w-7xl mx-auto w-full">
+                <h2 class="text-5xl md:text-6xl font-bold gradient-text mb-16 text-center">Featured Work</h2>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Project 1 -->
+                    <div class="project-card glass-panel overflow-hidden">
+                        <div class="relative h-64 bg-gradient-to-br from-purple-900 to-indigo-900">
+                            <div id="project1-canvas" style="width: 100%; height: 100%;"></div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
+                                <div>
+                                    <h3 class="text-2xl font-bold mb-2">Particle Galaxy</h3>
+                                    <p class="text-gray-300 text-sm">Interactive particle system with 10,000+ particles</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-3 py-1 bg-purple-600/30 rounded-full text-xs">Three.js</span>
+                                <span class="px-3 py-1 bg-pink-600/30 rounded-full text-xs">WebGL</span>
+                                <span class="px-3 py-1 bg-blue-600/30 rounded-full text-xs">GLSL</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Project 2 -->
+                    <div class="project-card glass-panel overflow-hidden">
+                        <div class="relative h-64 bg-gradient-to-br from-pink-900 to-purple-900">
+                            <div id="project2-canvas" style="width: 100%; height: 100%;"></div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
+                                <div>
+                                    <h3 class="text-2xl font-bold mb-2">Morphing Shapes</h3>
+                                    <p class="text-gray-300 text-sm">Geometry transformation with smooth transitions</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-3 py-1 bg-purple-600/30 rounded-full text-xs">Three.js</span>
+                                <span class="px-3 py-1 bg-pink-600/30 rounded-full text-xs">Animation</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Project 3 -->
+                    <div class="project-card glass-panel overflow-hidden">
+                        <div class="relative h-64 bg-gradient-to-br from-indigo-900 to-blue-900">
+                            <div id="project3-canvas" style="width: 100%; height: 100%;"></div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
+                                <div>
+                                    <h3 class="text-2xl font-bold mb-2">Geometric Wave</h3>
+                                    <p class="text-gray-300 text-sm">Procedural animation with sine waves</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-3 py-1 bg-purple-600/30 rounded-full text-xs">Math</span>
+                                <span class="px-3 py-1 bg-blue-600/30 rounded-full text-xs">Procedural</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="min-h-screen flex items-center justify-center px-4 py-20">
+            <div class="max-w-4xl mx-auto w-full">
+                <h2 class="text-5xl md:text-6xl font-bold gradient-text mb-16 text-center">Let's Connect</h2>
+                <div class="glass-panel p-8 md:p-12">
+                    <div class="grid md:grid-cols-2 gap-8 mb-8">
+                        <div class="glass-panel p-6 text-center hover:transform hover:scale-105 transition-all">
+                            <div class="text-4xl mb-4">📧</div>
+                            <h3 class="font-bold mb-2">Email</h3>
+                            <p class="text-gray-400">hello@deepak.dev</p>
+                        </div>
+                        <div class="glass-panel p-6 text-center hover:transform hover:scale-105 transition-all">
+                            <div class="text-4xl mb-4">💼</div>
+                            <h3 class="font-bold mb-2">LinkedIn</h3>
+                            <p class="text-gray-400">@deepakportfolio</p>
+                        </div>
+                    </div>
+                    <form class="space-y-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <input type="text" placeholder="Your Name" 
+                                class="w-full px-6 py-4 bg-gray-800/50 border border-purple-500/30 rounded-xl focus:border-purple-500 focus:outline-none transition-all">
+                            <input type="email" placeholder="Your Email" 
+                                class="w-full px-6 py-4 bg-gray-800/50 border border-purple-500/30 rounded-xl focus:border-purple-500 focus:outline-none transition-all">
+                        </div>
+                        <textarea placeholder="Your Message" rows="5" 
+                            class="w-full px-6 py-4 bg-gray-800/50 border border-purple-500/30 rounded-xl focus:border-purple-500 focus:outline-none transition-all"></textarea>
+                        <button type="submit" 
+                            class="w-full contact-btn px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl font-semibold text-lg hover:shadow-2xl transition-all">
+                            Send Message
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="py-12 px-4 border-t border-gray-800">
+            <div class="max-w-7xl mx-auto text-center">
+                <div class="text-3xl font-bold gradient-text mb-6">DEEPAK</div>
+                <div class="flex justify-center space-x-6 mb-6">
+                    <a href="#" class="w-12 h-12 rounded-full glass-panel flex items-center justify-center hover:bg-purple-600/30 transition-all">
+                        <span class="text-xl">𝕏</span>
+                    </a>
+                    <a href="#" class="w-12 h-12 rounded-full glass-panel flex items-center justify-center hover:bg-purple-600/30 transition-all">
+                        <span class="text-xl">in</span>
+                    </a>
+                    <a href="#" class="w-12 h-12 rounded-full glass-panel flex items-center justify-center hover:bg-purple-600/30 transition-all">
+                        <span class="text-xl">gh</span>
+                    </a>
+                </div>
+                <p class="text-gray-500">© 2025 DEEPAK Portfolio. Crafted with Three.js</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Main Scene Setup
+        let scene, camera, renderer, particles, particleSystem;
+        let mouse = { x: 0, y: 0 };
+        
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            // Create particle system
+            const particleCount = 5000;
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+            
+            for (let i = 0; i < particleCount; i++) {
+                positions[i * 3] = (Math.random() - 0.5) * 100;
+                positions[i * 3 + 1] = (Math.random() - 0.5) * 100;
+                positions[i * 3 + 2] = (Math.random() - 0.5) * 100;
+                
+                const color = new THREE.Color();
+                color.setHSL(Math.random() * 0.3 + 0.7, 0.8, 0.6);
+                colors[i * 3] = color.r;
+                colors[i * 3 + 1] = color.g;
+                colors[i * 3 + 2] = color.b;
+            }
+            
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            
+            const material = new THREE.PointsMaterial({
+                size: 0.5,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+            
+            particleSystem = new THREE.Points(geometry, material);
+            scene.add(particleSystem);
+            
+            // Add geometric shapes
+            const torusGeometry = new THREE.TorusGeometry(5, 1, 16, 100);
+            const torusMaterial = new THREE.MeshBasicMaterial({
+                color: 0x667eea,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.3
+            });
+            const torus = new THREE.Mesh(torusGeometry, torusMaterial);
+            torus.position.set(-20, 0, -30);
+            scene.add(torus);
+            
+            camera.position.z = 50;
+            
+            // Mouse movement
+            document.addEventListener('mousemove', (e) => {
+                mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            });
+            
+            window.addEventListener('resize', onWindowResize);
+            
+            // Initialize project canvases
+            initProjectCanvases();
+            initProfileCanvas();
+            
+            animate();
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const time = Date.now() * 0.0001;
+            
+            if (particleSystem) {
+                particleSystem.rotation.x = time * 0.3;
+                particleSystem.rotation.y = time * 0.5;
+                
+                const positions = particleSystem.geometry.attributes.position.array;
+                for (let i = 0; i < positions.length; i += 3) {
+                    positions[i + 1] = Math.sin(time + positions[i]) * 2;
+                }
+                particleSystem.geometry.attributes.position.needsUpdate = true;
+            }
+            
+            camera.position.x += (mouse.x * 5 - camera.position.x) * 0.05;
+            camera.position.y += (mouse.y * 5 - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
+            
+            renderer.render(scene, camera);
+        }
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Project Canvas Initializations
+        function initProjectCanvases() {
+            // Project 1 - Particle Galaxy
+            const canvas1 = document.getElementById('project1-canvas');
+            const scene1 = new THREE.Scene();
+            const camera1 = new THREE.PerspectiveCamera(75, canvas1.offsetWidth / canvas1.offsetHeight, 0.1, 1000);
+            const renderer1 = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer1.setSize(canvas1.offsetWidth, canvas1.offsetHeight);
+            canvas1.appendChild(renderer1.domElement);
+            
+            const particles1 = new THREE.BufferGeometry();
+            const positions1 = new Float32Array(1000 * 3);
+            for (let i = 0; i < 1000; i++) {
+                positions1[i * 3] = (Math.random() - 0.5) * 20;
+                positions1[i * 3 + 1] = (Math.random() - 0.5) * 20;
+                positions1[i * 3 + 2] = (Math.random() - 0.5) * 20;
+            }
+            particles1.setAttribute('position', new THREE.BufferAttribute(positions1, 3));
+            const particleMaterial1 = new THREE.PointsMaterial({ color: 0x667eea, size: 0.1 });
+            const particleSystem1 = new THREE.Points(particles1, particleMaterial1);
+            scene1.add(particleSystem1);
+            camera1.position.z = 15;
+            
+            function animate1() {
+                requestAnimationFrame(animate1);
+                particleSystem1.rotation.x += 0.001;
+                particleSystem1.rotation.y += 0.002;
+                renderer1.render(scene1, camera1);
+            }
+            animate1();
+            
+            // Project 2 - Morphing Shapes
+            const canvas2 = document.getElementById('project2-canvas');
+            const scene2 = new THREE.Scene();
+            const camera2 = new THREE.PerspectiveCamera(75, canvas2.offsetWidth / canvas2.offsetHeight, 0.1, 1000);
+            const renderer2 = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer2.setSize(canvas2.offsetWidth, canvas2.offsetHeight);
+            canvas2.appendChild(renderer2.domElement);
+            
+            const geometry2 = new THREE.IcosahedronGeometry(3, 0);
+            const material2 = new THREE.MeshBasicMaterial({ 
+                color: 0xf093fb, 
+                wireframe: true 
+            });
+            const mesh2 = new THREE.Mesh(geometry2, material2);
+            scene2.add(mesh2);
+            camera2.position.z = 8;
+            
+            function animate2() {
+                requestAnimationFrame(animate2);
+                mesh2.rotation.x += 0.01;
+                mesh2.rotation.y += 0.01;
+                renderer2.render(scene2, camera2);
+            }
+            animate2();
+            
+            // Project 3 - Geometric Wave
+            const canvas3 = document.getElementById('project3-canvas');
+            const scene3 = new THREE.Scene();
+            const camera3 = new THREE.PerspectiveCamera(75, canvas3.offsetWidth / canvas3.offsetHeight, 0.1, 1000);
+            const renderer3 = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer3.setSize(canvas3.offsetWidth, canvas3.offsetHeight);
+            canvas3.appendChild(renderer3.domElement);
+            
+            const planeGeometry = new THREE.PlaneGeometry(10, 10, 20, 20);
+            const planeMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x667eea, 
+                wireframe: true 
+            });
+            const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+            plane.rotation.x = -Math.PI / 3;
+            scene3.add(plane);
+            camera3.position.z = 12;
+            camera3.position.y = 5;
+            
+            function animate3() {
+                requestAnimationFrame(animate3);
+                const time = Date.now() * 0.001;
+                const positions = plane.geometry.attributes.position.array;
+                for (let i = 0; i < positions.length; i += 3) {
+                    const x = positions[i];
+                    const y = positions[i + 1];
+                    positions[i + 2] = Math.sin(x + time) * Math.cos(y + time) * 0.5;
+                }
+                plane.geometry.attributes.position.needsUpdate = true;
+                renderer3.render(scene3, camera3);
+            }
+            animate3();
+        }
+        
+        // Profile Canvas with rotating 3D object
+        function initProfileCanvas() {
+            const canvas = document.getElementById('profile-canvas');
+            if (!canvas) return;
+            
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, canvas.offsetWidth / canvas.offsetHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+            canvas.appendChild(renderer.domElement);
+            
+            // Create multiple geometric shapes
+            const shapes = [];
+            
+            const dodecahedronGeo = new THREE.DodecahedronGeometry(1.5, 0);
+            const dodecahedronMat = new THREE.MeshBasicMaterial({ 
+                color: 0x667eea, 
+                wireframe: true 
+            });
+            const dodecahedron = new THREE.Mesh(dodecahedronGeo, dodecahedronMat);
+            dodecahedron.position.set(-2, 0, 0);
+            scene.add(dodecahedron);
+            shapes.push(dodecahedron);
+            
+            const octahedronGeo = new THREE.OctahedronGeometry(1.5, 0);
+            const octahedronMat = new THREE.MeshBasicMaterial({ 
+                color: 0xf093fb, 
+                wireframe: true 
+            });
+            const octahedron = new THREE.Mesh(octahedronGeo, octahedronMat);
+            octahedron.position.set(2, 0, 0);
+            scene.add(octahedron);
+            shapes.push(octahedron);
+            
+            const torusKnotGeo = new THREE.TorusKnotGeometry(1, 0.3, 100, 16);
+            const torusKnotMat = new THREE.MeshBasicMaterial({ 
+                color: 0x764ba2, 
+                wireframe: true 
+            });
+            const torusKnot = new THREE.Mesh(torusKnotGeo, torusKnotMat);
+            torusKnot.position.set(0, 2, 0);
+            scene.add(torusKnot);
+            shapes.push(torusKnot);
+            
+            camera.position.z = 8;
+            
+            function animate() {
+                requestAnimationFrame(animate);
+                shapes.forEach((shape, index) => {
+                    shape.rotation.x += 0.01 * (index + 1);
+                    shape.rotation.y += 0.01 * (index + 1);
+                });
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+        
+        // Smooth scroll function
+        function scrollToSection(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        
+        // Intersection Observer for scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+        
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+            
+            // Observe sections for scroll animations
+            document.querySelectorAll('section').forEach(section => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(30px)';
+                section.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+                observer.observe(section);
+            });
+            
+            // Smooth scroll for navigation
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
